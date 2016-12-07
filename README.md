@@ -1,4 +1,4 @@
 Python note
-PythonÑ§Ï°±Ê¼Ç
-ÏêÏ¸ÄÚÈİ¼û£º
-https://www.gitbook.com/book/liyingkun1237/lyk_python_note/details
+Pythonå­¦ä¹ ç¬”è®°
+è¯¦ç»†åœ°å€è§
+<https://www.gitbook.com/book/liyingkun1237/lyk_python_note/details>
