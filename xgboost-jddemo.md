@@ -15,14 +15,15 @@ Content
 
 data preparation
 ========================================================
-
+1.加载数据集
 
 ```r
 #1.加载数据集
 load('df_train_importance_oot_by_prod.RData') #加载后数据集名：df_train_importance
 load('df_test_importance_oot_by_prod.RData')  #加载后数据集名：df_test_importance
 ```
-
+  
+2.查看数据基本信息
 
 ```r
 #2.查看数据基本信息
@@ -40,10 +41,11 @@ dim(df_test_importance)
 ```
 [1] 7272  735
 ```
-
+  
+3.将训练集变为xgb.DMatrix格式
 
 ```r
-#1.将训练集变为xgb.DMatrix格式
+#3.将训练集变为xgb.DMatrix格式
 library(dplyr)
 library(xgboost)
 data_to_xgbDM=function(df_train,target='y'){
@@ -65,7 +67,16 @@ df_test_importance=data_to_xgbDM(df_test_importance)
 
 grid search
 ========================================================
-
+编写一个函数，实现人工网格调参
+参数列表：
+dtrain:用于训练的数据 包含X Y, xgb.DMatrix格式
+param：参数数据框, data.frame格式
+message：跑模型时每一次的备注与描述 character类型
+cv_nfold：交叉验证的折数 默认为5
+nthreads：计算时使用的cpu核数 默认为4
+cv_nround：迭代的次数
+N_cv_stop：提前迭代结束的次数
+verbose_:是否打印每一次迭代的结果  
 
 ```r
 #编写一个函数，实现人工网格调参
@@ -149,7 +160,7 @@ parameter select
 
 parameter select code
 =====================================================
-
+备选参数
 
 ```r
 #备选参数列表构成的数据框
@@ -174,7 +185,8 @@ head(param_step_imp_1,5)
 3             0.95     60 0.135
 4             0.95     60 0.135
 ```
-
+  
+模型调参
 
 ```r
 #模型调参
@@ -185,22 +197,22 @@ model_grid_search(df_train_importance,param_step_imp_1,'param_out',nthreads=16,c
 
 running to :1th param 
 max_auc:0.705238
-Time difference of 1.217186 mins
+Time difference of 1.238784 mins
 
 
 running to :2th param 
 max_auc:0.702919
-Time difference of 1.789686 mins
+Time difference of 1.743336 mins
 
 
 running to :3th param 
 max_auc:0.705245
-Time difference of 1.264903 mins
+Time difference of 1.205153 mins
 
 
 running to :4th param 
 max_auc:0.703364
-Time difference of 1.814378 mins
+Time difference of 1.74112 mins
 
 modle-out-topath:/home/datashare/crawl_ecomm_jd/lyk_建模
 ```
@@ -210,6 +222,7 @@ modle-out-topath:/home/datashare/crawl_ecomm_jd/lyk_建模
 
 best parameter select
 ===============================================================
+模型调参结果
 
 ```r
 #模型调参结果
@@ -233,6 +246,17 @@ head(each_paramlst_best,5)
 
 model train
 ==========================================
+编写一个函数，实现模型训练和独立测试集的auc ks指标计算
+参数列表
+dtrain：训练集 xgb.DMtrix类型
+dtest：独立测试集 xgb.DMtrix类型
+param_ls：参数列表 list类型
+message：模型备注 用于保存importance变量时文件名的备注信息
+importance：是否输出importance变量 
+nthreads：计算使用的cpu
+nrounds:模型迭代次数
+verbose_：是否打印信息（本函数的不足，使用了watchlist参数，与此参数冲突）
+
 
 ```r
 #编写一个函数，实现模型训练和独立测试集的auc ks指标计算
@@ -282,8 +306,8 @@ model_train=function(dtrain,dtest,param_ls,message,importance=T,nthreads=12,nrou
   return(result)
 }
 ```
-
-
+  
+两个模型得分统计量
 
 ```r
 #计算ks统计指标：tpr-fpr的最大值 ROC曲线中的点的坐标(x,y),其中y-x的最大值
@@ -305,7 +329,7 @@ AUC<-function(pred,y){
 }
 ```
 
-
+选出auc最佳的参数，带入模型中建立模型  
 
 ```r
 #选出auc最佳的参数，带入模型中建立模型
@@ -351,7 +375,8 @@ $lambda
 $eta
 [1] 0.135
 ```
-
+  
+训练模型并计算指标
 
 ```r
 #训练模型并计算指标
@@ -362,20 +387,12 @@ model_train(df_train_importance,df_test_importance,best_param,'param_bst_imp',im
 [0]	train-auc:0.621403	test-auc:0.594476
 [1]	train-auc:0.646416	test-auc:0.609414
 [2]	train-auc:0.663093	test-auc:0.628287
-[3]	train-auc:0.663850	test-auc:0.629045
-[4]	train-auc:0.675769	test-auc:0.639435
-[5]	train-auc:0.678071	test-auc:0.639245
-[6]	train-auc:0.682812	test-auc:0.640049
-[7]	train-auc:0.686980	test-auc:0.643947
-[8]	train-auc:0.690062	test-auc:0.644320
-[9]	train-auc:0.690602	test-auc:0.644670
-[10]	train-auc:0.693892	test-auc:0.647515
- ... ...
+    ... ...
 [125]	train-auc:0.786332	test-auc:0.678957
 [126]	train-auc:0.786529	test-auc:0.678990
 [127]	train-auc:0.786779	test-auc:0.678862
 
-Time difference of 17.5189 secs
+Time difference of 16.89982 secs
 ```
 
 ```
